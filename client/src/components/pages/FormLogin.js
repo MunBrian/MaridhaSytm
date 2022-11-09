@@ -1,39 +1,84 @@
-import React, {useState, useEffect} from 'react';
-import './Form.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import axios from "axios";
+import "./Form.css";
 
+function FormLogin() {
+  const navigate = useNavigate();
 
-function FormLogin () {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-    const[name, setName] = useState('')
-    const[password, setPassword] = useState('')
+  const { email, password } = formData;
 
-    function login(){
+  const onSubmit = async (e) => {
+    e.preventDefault();
 
-        const user = {
-            name,
-            password
-        }
-        console.log(user)
+    if (!email || !password) {
+      toast.error("Please fill in all your fields");
     }
 
-    return (
-        <div className='logincontainer'>
-            <div className='col-md-5'>
+    try {
+      const userData = {
+        email,
+        password,
+      };
+      const url = "http://localhost:5000/api/users/login";
+      const res = await axios.post(url, userData);
+      toast.success("Registration is successfull");
+      navigate("/booking");
+    } catch (error) {
+      if (
+        error.response &&
+        error.response.status >= 400 &&
+        error.response.status <= 500
+      ) {
+        toast.error(error.response.data.message);
+      }
+    }
+  };
 
-                <div className='bs'>
-                    <h1>Log Into Your Account</h1>
-                    <input type="text" className="form-control" placeholder="Enter Your Username"
-                     value={name} onChange={(e) => {setName(e.target.value)}}  />
-                    <input type="password" className="form-control" placeholder="Enter Your Password"
-                    value={password} onChange={(e) => {setPassword(e.target.value)}} />   
+  const handleChange = (e) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
-                    <button className='btn btn-primary' onClick={login}>LOG IN</button>
+  return (
+    <div className="logincontainer">
+      <div className="col-md-5">
+        <div className="bs">
+          <form onSubmit={onSubmit}>
+            <h1>Log Into Your Account</h1>
+            <input
+              type="email"
+              className="form-control"
+              placeholder="Enter Your Username"
+              name="email"
+              value={email}
+              onChange={handleChange}
+            />
+            <input
+              type="password"
+              className="form-control"
+              placeholder="Enter Your Password"
+              name="password"
+              value={password}
+              onChange={handleChange}
+            />
 
-                </div>
-            </div>
-
+            <button className="btn btn-primary" type="submit">
+              Log In
+            </button>
+          </form>
         </div>
-    )
+      </div>
+    </div>
+  );
 }
 
 export default FormLogin;
