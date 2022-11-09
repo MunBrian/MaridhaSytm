@@ -44,6 +44,13 @@ const FormSignup = ({ submitForm }) => {
       try {
         const url = "http://localhost:5000/api/users/register";
         const res = await axios.post(url, userData);
+
+        //check if there is response
+        if (res.data) {
+          //store response in local storage
+          localStorage.setItem("user", JSON.stringify(res.data));
+        }
+
         toast.success("Registration is successfull");
         navigate("/login");
       } catch (error) {

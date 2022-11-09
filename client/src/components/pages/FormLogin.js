@@ -28,7 +28,14 @@ function FormLogin() {
       };
       const url = "http://localhost:5000/api/users/login";
       const res = await axios.post(url, userData);
-      toast.success("Registration is successfull");
+
+      //check if there is response
+      if (res.data) {
+        //store response in local storage
+        localStorage.setItem("user", JSON.stringify(res.data));
+      }
+
+      toast.success("Login Successfull");
       navigate("/booking");
     } catch (error) {
       if (

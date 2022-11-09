@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../../App.css";
 import "antd/dist/antd.css";
@@ -8,11 +9,19 @@ import moment from "moment";
 const { RangePicker } = DatePicker;
 
 function Process() {
+  const user = localStorage.getItem("user");
+
+  const navigate = useNavigate();
+
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState([]);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -46,7 +55,12 @@ function Process() {
             <h1>Error</h1>
           ) : (
             hotels.map((hotels) => {
-              return <h1>{hotels.name}</h1>;
+              return (
+                <div key={hotels.id}>
+                  <h1>{hotels.name}</h1>
+                  <p>{hotels.description}</p>;
+                </div>
+              );
             })
           )}
         </div>

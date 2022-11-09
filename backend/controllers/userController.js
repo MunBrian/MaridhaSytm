@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
 //@desc Register new user
@@ -38,6 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
       _id: user.id,
       name: user.name,
       email: user.email,
+      token: generateToken(user._id),
     });
   } else {
     res.status(400);
@@ -59,12 +61,20 @@ const loginUser = asyncHandler(async (req, res) => {
       _id: user.id,
       name: user.name,
       email: user.email,
+      token: generateToken(user._id),
     });
   } else {
     res.status(400);
     throw new Error("Please enter a valid email and password");
   }
 });
+
+//generate JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "14d",
+  });
+};
 
 module.exports = {
   registerUser,
