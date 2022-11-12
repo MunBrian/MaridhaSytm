@@ -19,6 +19,9 @@ function Process() {
   const [loading, setLoading] = useState([]);
   const [error, setError] = useState(false);
 
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
   useEffect(() => {
     if (!user) {
       navigate("/login");
@@ -27,8 +30,6 @@ function Process() {
       try {
         setLoading(true);
         const data = (await axios.get("http://localhost:5000/api/hotels")).data;
-        //const characters = await response.json();
-        //setHotels(response);
         setHotels(data);
         setLoading(false);
       } catch (error) {
@@ -38,34 +39,39 @@ function Process() {
       }
     };
     fetchData();
-  }, []);
+  }, [toDate, fromDate, navigate]);
 
   function filterByDate(dates) {
-    console.log(moment(dates[0].format("DD-MM-YYYY")));
-    console.log(moment(dates[1].format("DD-MM-YYYY")));
+    setToDate(moment(dates[1]).format("DD-MM-YYYY"));
+    setFromDate(moment(dates[2]).format("DD-MM-YYYY"));
   }
 
   return (
     <div className="container">
-      <div>
-        <div>
+      <div className="row-md-5 ">
+        <div className="col-md-3">
           <RangePicker format="DD-MM-YYYY" onChange={filterByDate} />
-          <div className="row justify-content-centre mt-5">
-            {loading ? (
-              <h1>Loading....</h1>
-            ) : error ? (
-              <h1>Error</h1>
-            ) : (
-              hotels.map((hotels) => {
-                return (
-                  //<div className="col-md-9 mt-2">
-                  <Hotel hotels={hotels} />
-                  //</div>
-                );
-              })
-            )}
-          </div>
         </div>
+      </div>
+      <div className="row justify-content-centre mt-5">
+        {loading ? (
+          <h1>Loading....</h1>
+        ) : error ? (
+          <h1>Error</h1>
+        ) : (
+          hotels.map((hotels) => {
+            return (
+              //<div className="col-md-9 mt-2">
+              <Hotel
+                key={hotels._id}
+                hotels={hotels}
+                fromDate={fromDate}
+                toDate={toDate}
+              />
+              //</div>
+            );
+          })
+        )}
       </div>
     </div>
   );

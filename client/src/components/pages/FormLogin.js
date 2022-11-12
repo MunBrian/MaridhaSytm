@@ -35,7 +35,7 @@ function FormLogin() {
         localStorage.setItem("user", JSON.stringify(res.data));
       }
 
-      toast.success("Registration is successfull");
+      toast.success("Login is successfull");
       navigate("/booking");
     } catch (error) {
       if (
@@ -64,7 +64,7 @@ function FormLogin() {
             <input
               type="email"
               className="form-input"
-              placeholder="Enter Your Username"
+              placeholder="Enter Your email"
               name="email"
               value={email}
               onChange={handleChange}

@@ -7,7 +7,11 @@ import "./navbar.css";
 function Navbar() {
   const navigate = useNavigate();
 
+  //get user from ls
   const user = localStorage.getItem("user");
+
+  //get name
+  const name = JSON.parse(user).name;
 
   const [click, setClick] = useState(false);
   const [button, setButton] = useState(false);
@@ -46,11 +50,16 @@ function Navbar() {
           </div>
           <ul className={click ? "nav-menu active" : "nav-menu"}>
             {user ? (
-              <li>
-                <Button buttonStyle="btn--outline" onClick={onLogout}>
-                  Logout
-                </Button>
-              </li>
+              <>
+                <li style={{ marginRight: "10px", marginTop: "10px" }}>
+                  <h4 style={{ color: "white" }}>Welcome {name}</h4>
+                </li>
+                <li>
+                  <Button buttonStyle="btn--outline" onClick={onLogout}>
+                    Logout
+                  </Button>
+                </li>
+              </>
             ) : (
               <>
                 <li className="nav-item">

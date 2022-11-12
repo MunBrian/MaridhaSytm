@@ -16,12 +16,13 @@ const FormSignup = ({ submitForm }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
+    phonenumber: null,
     email: "",
     password: "",
     password2: "",
   });
 
-  const { name, email, password, password2 } = formData;
+  const { name, email, phonenumber, password, password2 } = formData;
 
   const handleChange = (e) => {
     setFormData((prevState) => ({
@@ -32,8 +33,14 @@ const FormSignup = ({ submitForm }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!password || !email || !name || !password2) {
+    if (!password || !email || !name || !password2 || !phonenumber) {
       toast.error("Please fill all your details");
+    } else if (
+      !/^(?:254)((?:(?:7(?:(?:[01249][0-9])|(?:5[789])|(?:6[89])))|(?:1(?:[1][0-5])))[0-9]{6})$/.test(
+        phonenumber
+      )
+    ) {
+      toast.error("Number should be written as: 254710200300 form");
     } else if (password !== password2) {
       toast.error("Passwords do not match");
     } else if (password.length < 6) {
@@ -44,6 +51,7 @@ const FormSignup = ({ submitForm }) => {
       const userData = {
         name,
         email,
+        phonenumber,
         password,
       };
       try {
@@ -85,6 +93,17 @@ const FormSignup = ({ submitForm }) => {
             name="name"
             placeholder="Enter your username"
             value={name}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="form-inputs">
+          <label className="form-label">Phone Number</label>
+          <input
+            className="form-input"
+            type="number"
+            name="phonenumber"
+            placeholder="Enter Phone number as 254712300400"
+            value={phonenumber}
             onChange={handleChange}
           />
           {/* {errors.username && <p>{errors.username}</p>} */}
