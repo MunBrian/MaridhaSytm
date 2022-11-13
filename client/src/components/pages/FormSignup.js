@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import "./Form.css";
 
-const FormSignup = ({ submitForm }) => {
+const FormSignup = () => {
   // const { handleChange, handleSubmit, values, errors } = useForm(
   //   submitForm,
   //   validate
@@ -16,7 +16,7 @@ const FormSignup = ({ submitForm }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
-    phonenumber: null,
+    phonenumber: "",
     email: "",
     password: "",
     password2: "",

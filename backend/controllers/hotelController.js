@@ -1,12 +1,16 @@
 const asyncHandler = require("express-async-handler");
 const Hotel = require("../models/hotel");
 const axios = require("axios");
+const pdfTemplate = require("../pdfGen");
+const pdf = require("html-pdf");
+const nodemailer = require("nodemailer");
+const fs = require("fs");
 
 //@desc GET all hotels
 //@route GET/api/hotels
 //@access Private
 const getAllHotels = asyncHandler(async (req, res) => {
-  const hotels = await Hotel.find({ currentbooking: false });
+  const hotels = await Hotel.find({});
   res.status(200).json(hotels);
 });
 
@@ -15,6 +19,8 @@ const getAllHotels = asyncHandler(async (req, res) => {
 // @access Private
 const bookHotel = asyncHandler(async (req, res) => {
   const hotel = await Hotel.findById(req.params.id);
+
+  console.log(req.user.email);
 
   //check if hotel exists
   if (!hotel) {
@@ -37,9 +43,12 @@ const bookHotel = asyncHandler(async (req, res) => {
   //get user phone number
   const userNumber = req.user.phonenumber;
 
+  //catch response from lipa na mpesa
   const response = await lipaNaMpesaOnline(totalRent, userNumber);
 
-  if (response) {
+  //check response code
+  if (response.ResponseCode === "0") {
+    //update hotel
     const updatedHotel = await Hotel.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -49,6 +58,7 @@ const bookHotel = asyncHandler(async (req, res) => {
       }
     );
 
+    //check if hotel exist
     if (updatedHotel) {
       res.status(201).json({
         updatedHotel,
@@ -56,7 +66,33 @@ const bookHotel = asyncHandler(async (req, res) => {
     } else {
       throw new Error("No hotel found. Error occurred");
     }
+  } else {
+    throw new Error("Payment unsuccessfull");
   }
+
+  //get users name and email
+  const userName = req.user.name;
+  const useremail = req.user.email;
+
+  //get hotel details
+  const hotelName = hotel.name;
+  const hotelType = hotel.type;
+
+  //call generatepdf func and pass user/hotel data as arguments
+  await generatePDF(
+    userName,
+    fromDate,
+    toDate,
+    totalRent,
+    hotelName,
+    hotelType
+  );
+
+  //send pdf to useremail
+  await sendEmail(useremail);
+
+  //delete PDF
+  //await deletePDF();
 });
 
 //@desc create a room
@@ -102,6 +138,7 @@ const createHotel = asyncHandler(async (req, res) => {
   }
 });
 
+//generate mpesatoken
 const mpesaOAuthToken = async () => {
   let consumer_key = process.env.CONSUMER_KEY;
   let consumer_secret = process.env.CONSUMER_SECRET;
@@ -127,6 +164,7 @@ const mpesaOAuthToken = async () => {
   }
 };
 
+//lipanaMpesa connection
 const lipaNaMpesaOnline = async (totalRent, userNumber) => {
   let token = await mpesaOAuthToken();
 
@@ -182,13 +220,89 @@ const lipaNaMpesaOnline = async (totalRent, userNumber) => {
   };
 
   try {
-    const { data } = axios
+    const data = axios
       .post(url, body, { headers: headers })
-      .catch(console.log);
-    return true;
+      .then((response) => {
+        return response.data;
+      });
+    return data;
   } catch (error) {
     console.log(error.data);
   }
+};
+
+//generate pdf func
+const generatePDF = async (
+  userName,
+  fromDate,
+  toDate,
+  totalRent,
+  hotelName,
+  hotelType
+) => {
+  try {
+    pdf
+      .create(
+        pdfTemplate(
+          userName,
+          fromDate,
+          toDate,
+          totalRent,
+          hotelName,
+          hotelType
+        ),
+        {}
+      )
+      .toFile("./receipt.pdf", (err, res) => {
+        if (err) {
+          console.log(err);
+        }
+        console.log(res);
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+//send email func
+const sendEmail = async (useremail) => {
+  try {
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    let mailOptions = {
+      from: process.env.EMAIL,
+      to: useremail,
+      subject: "Maridha Hotel Booking Receipt",
+      text: "Your hotel booking receipt is attached below",
+      attachments: [{ filename: "receipt.pdf", path: "./receipt.pdf" }],
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log("Email sent successfully");
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const deletePDF = async () => {
+  //delete pdf file from system
+  fs.unlink("./receipt.pdf", function (err) {
+    if (err) {
+      console.error(err);
+    }
+    console.log("File has been Deleted");
+  });
 };
 
 module.exports = {

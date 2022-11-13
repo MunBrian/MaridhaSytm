@@ -1,11 +1,11 @@
-import React from 'react';
-import '../../App.css';
-import Process from './Process';
+import React from "react";
+import "../../App.css";
+import Process from "./Process";
 
 function Booking() {
   return (
     <>
-    <Process/>
+      <Process />
     </>
   );
 }

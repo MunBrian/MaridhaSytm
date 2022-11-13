@@ -7,17 +7,21 @@ import "./navbar.css";
 function Navbar() {
   const navigate = useNavigate();
 
-  //get user from ls
-  const user = localStorage.getItem("user");
-
-  //get name
-  const name = JSON.parse(user).name;
-
   const [click, setClick] = useState(false);
   const [button, setButton] = useState(false);
 
   const handleClick = () => setClick(!click);
   const closeMobileMenu = () => setClick(false);
+
+  //get user from LS
+  const user = localStorage.getItem("user");
+
+  let name;
+
+  if (user) {
+    //get name
+    name = JSON.parse(user).name;
+  }
 
   const showButton = () => {
     if (window.innerWidth <= 960) {
@@ -52,7 +56,7 @@ function Navbar() {
             {user ? (
               <>
                 <li style={{ marginRight: "10px", marginTop: "10px" }}>
-                  <h4 style={{ color: "white" }}>Welcome {name}</h4>
+                  <h4 style={{ color: "white" }}>Welcome {name} </h4>
                 </li>
                 <li>
                   <Button buttonStyle="btn--outline" onClick={onLogout}>

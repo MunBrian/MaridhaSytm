@@ -3,7 +3,7 @@ import "./Hotel.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-function Hotel({ hotels, fromDate, toDate }) {
+function Hotel({ hotels, fromDate, toDate, fetchData }) {
   const bookRoom = async (e) => {
     e.preventDefault();
 
@@ -12,6 +12,11 @@ function Hotel({ hotels, fromDate, toDate }) {
     //check if date is specified
     if (!fromDate || !toDate) {
       toast.error("Please specify hotel stay dates");
+      return;
+    } else if (hotels.fromDate === fromDate || hotels.toDate === toDate) {
+      toast.error(
+        `Hotel is already booked from ${hotels.fromDate} to ${hotels.toDate}. Please choose other dates`
+      );
       return;
     }
 
@@ -33,8 +38,14 @@ function Hotel({ hotels, fromDate, toDate }) {
     const res = await axios.post(url, roomDetails, config);
 
     if (res) {
-      window.location.reload(true);
+      setTimeout(() => {
+        toast.success("An receipt was sent to your email");
+      }, 4000);
     }
+
+    setTimeout(() => {
+      fetchData();
+    }, 6000);
   };
 
   return (
