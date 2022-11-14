@@ -3,8 +3,8 @@ const Hotel = require("../models/hotel");
 const axios = require("axios");
 const pdfTemplate = require("../pdfGen");
 const pdf = require("html-pdf");
-const nodemailer = require("nodemailer");
 const fs = require("fs");
+const sendEmail = require("../email");
 
 //@desc GET all hotels
 //@route GET/api/hotels
@@ -18,13 +18,10 @@ const getAllHotels = asyncHandler(async (req, res) => {
 // @route post/api/hotels/book
 // @access Private
 const bookHotel = asyncHandler(async (req, res) => {
-  // try {
-  //   if (fs.existsSync("./receipt.pdf")) {
-  //     deletePDF();
-  //   }
-  // } catch (err) {
-  //   console.error(err);
-  // }
+  //get users details
+  const userName = req.user.name;
+  const useremail = req.user.email;
+  const userNumber = req.user.phonenumber;
 
   const hotel = await Hotel.findById(req.params.id);
 
@@ -35,6 +32,10 @@ const bookHotel = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error(`hotel with ${req.body.hotel_id} not found`);
   }
+
+  //get hotel details
+  const hotelName = hotel.name;
+  const hotelType = hotel.type;
 
   //calculate rent
   const rentperday = hotel.rentperday;
@@ -47,9 +48,6 @@ const bookHotel = asyncHandler(async (req, res) => {
 
   //set totalRent to be paid
   const totalRent = bookingDays * parseInt(rentperday);
-
-  //get user phone number
-  const userNumber = req.user.phonenumber;
 
   //catch response from lipa na mpesa
   const response = await lipaNaMpesaOnline(totalRent, userNumber);
@@ -78,29 +76,27 @@ const bookHotel = asyncHandler(async (req, res) => {
     throw new Error("Payment unsuccessfull");
   }
 
-  //get users name and email
-  const userName = req.user.name;
-  const useremail = req.user.email;
-
-  //get hotel details
-  const hotelName = hotel.name;
-  const hotelType = hotel.type;
-
   //generate pdf
-  const resPDF = generatePDF(
+  generatePDF(
     userName,
     fromDate,
     toDate,
     totalRent,
     hotelName,
-    hotelType
+    hotelType,
+    useremail,
+    sendEmail
   );
 
-  if (resPDF) {
-    //call generatepdf func and pass user/hotel data as arguments
-    sendEmail(useremail);
-  }
+  deletePDF();
 });
+
+//send email to user
+//   sendEmail(useremail);
+
+//   //delete pdf
+//   deletePDF();
+// });
 
 //@desc create a room
 //@route post/api/hotels/add
@@ -239,13 +235,15 @@ const lipaNaMpesaOnline = async (totalRent, userNumber) => {
 };
 
 //generate pdf func
-const generatePDF = (
+const generatePDF = async (
   userName,
   fromDate,
   toDate,
   totalRent,
   hotelName,
-  hotelType
+  hotelType,
+  useremail,
+  sendEmail
 ) => {
   let response = false;
   try {
@@ -264,44 +262,15 @@ const generatePDF = (
       .toFile("./receipt.pdf", (err, res) => {
         if (res) {
           console.log(res);
+          sendEmail(useremail);
         } else {
           console.log(err);
         }
       });
 
-    return (response = true);
-  } catch (error) {
-    console.log(error);
-  }
-};
+    response = true;
 
-//send email func
-const sendEmail = (useremail) => {
-  try {
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
-    let mailOptions = {
-      from: process.env.EMAIL,
-      to: useremail,
-      subject: "Maridha Hotel Booking Receipt",
-      text: "Your hotel booking receipt is attached below",
-      attachments: [{ filename: "receipt.pdf", path: "./receipt.pdf" }],
-    };
-
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.log("Error:", err);
-      } else {
-        console.log("Email sent successfully");
-        deletePDF();
-      }
-    });
+    return response;
   } catch (error) {
     console.log(error);
   }
