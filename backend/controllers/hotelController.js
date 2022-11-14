@@ -18,9 +18,17 @@ const getAllHotels = asyncHandler(async (req, res) => {
 // @route post/api/hotels/book
 // @access Private
 const bookHotel = asyncHandler(async (req, res) => {
+  try {
+    if (fs.existsSync("./receipt.pdf")) {
+      deletePDF();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
   const hotel = await Hotel.findById(req.params.id);
 
-  console.log(req.user.email);
+  console.log(req.user.name);
 
   //check if hotel exists
   if (!hotel) {
@@ -85,14 +93,9 @@ const bookHotel = asyncHandler(async (req, res) => {
     toDate,
     totalRent,
     hotelName,
-    hotelType
+    hotelType,
+    useremail
   );
-
-  //send pdf to useremail
-  await sendEmail(useremail);
-
-  //delete PDF
-  //await deletePDF();
 });
 
 //@desc create a room
@@ -238,7 +241,8 @@ const generatePDF = async (
   toDate,
   totalRent,
   hotelName,
-  hotelType
+  hotelType,
+  useremail
 ) => {
   try {
     pdf
@@ -259,6 +263,8 @@ const generatePDF = async (
         }
         console.log(res);
       });
+
+    await sendEmail(useremail);
   } catch (error) {
     console.log(error);
   }
@@ -295,7 +301,7 @@ const sendEmail = async (useremail) => {
   }
 };
 
-const deletePDF = async () => {
+const deletePDF = () => {
   //delete pdf file from system
   fs.unlink("./receipt.pdf", function (err) {
     if (err) {

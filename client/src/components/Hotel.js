@@ -40,12 +40,12 @@ function Hotel({ hotels, fromDate, toDate, fetchData }) {
     if (res) {
       setTimeout(() => {
         toast.success("An receipt was sent to your email");
-      }, 4000);
+      }, 10000);
     }
 
     setTimeout(() => {
-      fetchData();
-    }, 6000);
+      window.location.reload(true);
+    }, 14000);
   };
 
   return (
