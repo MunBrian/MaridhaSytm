@@ -18,13 +18,13 @@ const getAllHotels = asyncHandler(async (req, res) => {
 // @route post/api/hotels/book
 // @access Private
 const bookHotel = asyncHandler(async (req, res) => {
-  try {
-    if (fs.existsSync("./receipt.pdf")) {
-      deletePDF();
-    }
-  } catch (err) {
-    console.error(err);
-  }
+  // try {
+  //   if (fs.existsSync("./receipt.pdf")) {
+  //     deletePDF();
+  //   }
+  // } catch (err) {
+  //   console.error(err);
+  // }
 
   const hotel = await Hotel.findById(req.params.id);
 
@@ -86,16 +86,20 @@ const bookHotel = asyncHandler(async (req, res) => {
   const hotelName = hotel.name;
   const hotelType = hotel.type;
 
-  //call generatepdf func and pass user/hotel data as arguments
-  await generatePDF(
+  //generate pdf
+  const resPDF = generatePDF(
     userName,
     fromDate,
     toDate,
     totalRent,
     hotelName,
-    hotelType,
-    useremail
+    hotelType
   );
+
+  if (resPDF) {
+    //call generatepdf func and pass user/hotel data as arguments
+    sendEmail(useremail);
+  }
 });
 
 //@desc create a room
@@ -235,15 +239,15 @@ const lipaNaMpesaOnline = async (totalRent, userNumber) => {
 };
 
 //generate pdf func
-const generatePDF = async (
+const generatePDF = (
   userName,
   fromDate,
   toDate,
   totalRent,
   hotelName,
-  hotelType,
-  useremail
+  hotelType
 ) => {
+  let response = false;
   try {
     pdf
       .create(
@@ -258,20 +262,21 @@ const generatePDF = async (
         {}
       )
       .toFile("./receipt.pdf", (err, res) => {
-        if (err) {
+        if (res) {
+          console.log(res);
+        } else {
           console.log(err);
         }
-        console.log(res);
       });
 
-    await sendEmail(useremail);
+    return (response = true);
   } catch (error) {
     console.log(error);
   }
 };
 
 //send email func
-const sendEmail = async (useremail) => {
+const sendEmail = (useremail) => {
   try {
     let transporter = nodemailer.createTransport({
       service: "gmail",
@@ -294,6 +299,7 @@ const sendEmail = async (useremail) => {
         console.log("Error:", err);
       } else {
         console.log("Email sent successfully");
+        deletePDF();
       }
     });
   } catch (error) {
