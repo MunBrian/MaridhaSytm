@@ -58,6 +58,18 @@ function Navbar() {
                 <li style={{ marginRight: "10px", marginTop: "10px" }}>
                   <h4 style={{ color: "white" }}>Welcome {name} </h4>
                 </li>
+                <Link
+                  style={{
+                    border: "1px solid white",
+                    textAlign: "center",
+                    color: "white",
+                    padding: "5px 10px",
+                    fontSize: "16px",
+                  }}
+                  to="/userbookings"
+                >
+                  Previous Bookings
+                </Link>
                 <li>
                   <Button buttonStyle="btn--outline" onClick={onLogout}>
                     Logout

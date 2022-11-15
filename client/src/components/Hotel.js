@@ -86,7 +86,7 @@ function Hotel({ hotels, fromDate, toDate }) {
     <div className="container">
       <div className="row">
         <div className="col-md-5">
-          <img src={hotels.imageurls[0]} className="smallimg" />
+          <img alt="hotel" src={hotels.imageurls[0]} className="smallimg" />
         </div>
         <div className="col-md-7">
           <h6>{hotels.name}</h6>
