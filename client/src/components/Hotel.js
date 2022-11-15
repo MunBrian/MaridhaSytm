@@ -1,51 +1,85 @@
-import React from "react";
 import "./Hotel.css";
 import axios from "axios";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
-function Hotel({ hotels, fromDate, toDate, fetchData }) {
+function Hotel({ hotels, fromDate, toDate }) {
+  const [booked, setBooked] = useState([]);
+
   const bookRoom = async (e) => {
     e.preventDefault();
 
+    const user = localStorage.getItem("user");
+    const token = JSON.parse(user).token;
     const { _id: hotel_id } = hotels;
 
     //check if date is specified
     if (!fromDate || !toDate) {
       toast.error("Please specify hotel stay dates");
       return;
-    } else if (hotels.fromDate === fromDate || hotels.toDate === toDate) {
-      toast.error(
-        `Hotel is already booked from ${hotels.fromDate} to ${hotels.toDate}. Please choose other dates`
-      );
-      return;
     }
 
-    const roomDetails = {
-      fromDate,
-      toDate,
-      currentbooking: true,
-    };
+    console.log(booked);
 
-    const user = localStorage.getItem("user");
-    const token = JSON.parse(user).token;
+    let checkBooked = false;
 
-    const config = {
-      headers: {
-        Authorization: `Basic ${token}`,
-      },
-    };
-    const url = "http://localhost:5000/api/hotels/book/" + hotel_id;
-    const res = await axios.post(url, roomDetails, config);
+    //check if hotel is booked
+    booked.forEach((bookedhotel) => {
+      if (
+        hotels.name === bookedhotel.name &&
+        (bookedhotel.fromDate === fromDate || bookedhotel.toDate === toDate)
+      ) {
+        toast.error(
+          `Sorry!! Hotel is booked from ${bookedhotel.fromDate} to ${bookedhotel.toDate}. Please pick other dates`
+        );
+        checkBooked = true;
+      }
+    });
 
-    if (res) {
+    //if not
+    if (checkBooked === false) {
+      //get hotel details
+      const hotelDetails = {
+        ...hotels,
+        fromDate: fromDate,
+        toDate: toDate,
+        currentBooking: true,
+      };
+
+      const config = {
+        headers: {
+          Authorization: `Basic ${token}`,
+        },
+      };
+
+      const res = await postRoom(hotel_id, config, hotelDetails);
+
+      if (res) {
+        setTimeout(() => {
+          toast.success("An receipt was sent to your email");
+        }, 10000);
+      }
+
       setTimeout(() => {
-        toast.success("An receipt was sent to your email");
-      }, 10000);
+        window.location.reload(true);
+      }, 14000);
     }
+  };
 
-    setTimeout(() => {
-      window.location.reload(true);
-    }, 14000);
+  useEffect(() => {
+    const fetchData = async () => {
+      const bookedData = (await axios.get("http://localhost:5000/api/booked"))
+        .data;
+      setBooked(bookedData);
+    };
+
+    fetchData();
+  }, []);
+
+  const postRoom = async (hotel_id, config, hotelDetails) => {
+    const url = "http://localhost:5000/api/hotels/book/" + hotel_id;
+    const res = await axios.post(url, hotelDetails, config);
+    return res;
   };
 
   return (

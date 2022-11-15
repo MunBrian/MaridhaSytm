@@ -13,6 +13,7 @@ const connectDB = require("./db");
 //route
 const usersRoute = require("./routes/usersRoute");
 const hotelRoute = require("./routes/hotelsRoute");
+const bookedRoute = require("./routes/bookedRoute");
 
 app.use(cors());
 app.use(express.json());
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use("/api/users", usersRoute);
 app.use("/api/hotels", hotelRoute);
+app.use("/api/booked", bookedRoute);
 
 //error handler
 app.use(errorHandler);

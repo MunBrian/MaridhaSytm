@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Hotel = require("../models/hotel");
+const BookHotel = require("../models/booking");
 const axios = require("axios");
 const pdfTemplate = require("../pdfGen");
 const pdf = require("html-pdf");
@@ -24,8 +25,6 @@ const bookHotel = asyncHandler(async (req, res) => {
   const userNumber = req.user.phonenumber;
 
   const hotel = await Hotel.findById(req.params.id);
-
-  console.log(req.user.name);
 
   //check if hotel exists
   if (!hotel) {
@@ -52,29 +51,38 @@ const bookHotel = asyncHandler(async (req, res) => {
   //catch response from lipa na mpesa
   const response = await lipaNaMpesaOnline(totalRent, userNumber);
 
-  //check response code
-  if (response.ResponseCode === "0") {
-    //update hotel
-    const updatedHotel = await Hotel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+  // const booked = await BookHotel.create(req.body);
+  // res.status(201).json({
+  //   booked,
+  // });
 
-    //check if hotel exist
-    if (updatedHotel) {
-      res.status(201).json({
-        updatedHotel,
-      });
-    } else {
-      throw new Error("No hotel found. Error occurred");
-    }
+  // check response code
+  //if (response.ResponseCode === "0") {
+  //create updatedHotel in hotel db
+
+  const data = req.body;
+  const removeId = "_id";
+
+  //remove _id from req.body
+  delete data[removeId];
+
+  const body = { ...data, bookedBy: req.user.id };
+
+  const booked = await BookHotel.create(body);
+
+  console.log(booked);
+
+  if (booked) {
+    res.status(201).json({
+      booked,
+    });
   } else {
-    throw new Error("Payment unsuccessfull");
+    throw new Error("No hotel found. Error occurred");
   }
+
+  // } else {
+  //   throw new Error("Payment unsuccessfull");
+  // }
 
   //generate pdf
   generatePDF(
@@ -90,13 +98,6 @@ const bookHotel = asyncHandler(async (req, res) => {
 
   deletePDF();
 });
-
-//send email to user
-//   sendEmail(useremail);
-
-//   //delete pdf
-//   deletePDF();
-// });
 
 //@desc create a room
 //@route post/api/hotels/add
